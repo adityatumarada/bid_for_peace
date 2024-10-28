@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Peace Premier League</title>
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+
+    <style>
+        body {
+            background-color: #f4f4f4;
+            font-family: Arial, sans-serif;
+        }
+        .player-card {
+            background-color: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s;
+        }
+        .player-card:hover {
+            transform: translateY(-2px);
+        }
+        .no-data {
+            text-align: center;
+            color: #6c757d;
+            margin: 20px 0;
+        }
+        .section-title {
+            color: #007bff;
+            font-weight: bold; /* Added bold style */
+        }
+        h1, h2, h3, h4, h5, h6 {
+            font-weight: bold; /* Ensure all headings are bold */
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-5">
+        <h1 class="text-center">Bid for Peace</h1>
+        <div class="row">
+            <!-- Left Column for Auction Sections -->
+            <div class="col-md-8">
+                <!-- Ongoing Auction Section -->
+                <div class="player-card">
+                    <h2 class="h5 section-title">Ongoing Auction</h2>
+                    {% if ongoing_player %}
+                        <p><strong>Player:</strong> {{ ongoing_player.name }}</p>
+                        <p><strong>Base Price:</strong> ${{ ongoing_player.base_price }}</p>
+                        <h4 class="h6">Bid History</h4>
+                        <ul class="list-unstyled">
+                            {% for bid in bids %}
+                                <li>Team: {{ bid.team.name }} - Bid: ${{ bid.price }}</li>
+                            {% empty %}
+                                <li>No bids yet.</li>
+                            {% endfor %}
+                        </ul>
+                        <form method="POST" action="{% url 'end_auction' ongoing_player.id %}" class="mt-3">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-danger">End Auction</button>
+                        </form>
+                    {% else %}
+                        <p class="no-data">No ongoing auction.</p>
+                    {% endif %}
+                </div>
+
+                <!-- Unsold Players Section -->
+                <div class="player-card">
+                    <h3 class="h5 section-title">Unsold Players</h3>
+                    <input type="text" id="search-bar" class="form-control mb-3" placeholder="Search unsold players...">
+                    <div id="unsold-players-list" class="row">
+                        {% for player in unsold_players %}
+                            <div class="col-md-4">
+                                <div class="player-card">
+                                    <h5 class="h6">{{ player.name }}</h5>
+                                    <p>Position: {{ player.position }}</p>
+                                    <p>Base Price: ${{ player.base_price }}</p>
+                                    {% if not ongoing_player %}
+                                        <a href="{% url 'start_auction' player.id %}" class="btn btn-primary">Start Auction</a>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        {% empty %}
+                            <p class="no-data">No unsold players available.</p>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Sold Players Section -->
+                <div class="player-card">
+                    <h3 class="h5 section-title">Sold Players</h3>
+                    <div class="row">
+                        {% for sale in sold_players %}
+                            <div class="col-md-4">
+                                <div class="player-card">
+                                    <h5 class="h6">{{ sale.player.name }}</h5>
+                                    <p>Sold to: {{ sale.team.name }}</p>
+                                    <p>Sold Price: ${{ sale.price }}</p>
+                                </div>
+                            </div>
+                        {% empty %}
+                            <p class="no-data">No players sold yet.</p>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column for Team Remaining Purses -->
+            <div class="col-md-4">
+                <div class="player-card">
+                    <h3 class="h5 section-title">Team Remaining Purses</h3>
+                    <div class="row">
+                        {% for team_name, purse in team_data.items %}
+                            <div class="col-12">
+                                <div class="player-card">
+                                    <h5 class="h6">{{ team_name }}</h5>
+                                    <p>Remaining Purse: ${{ purse }}</p>
+                                </div>
+                            </div>
+                        {% empty %}
+                            <p class="no-data">No teams available.</p>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('search-bar').addEventListener('input', function() {
+            const searchTerm = this.value.toLowerCase();
+            const players = document.querySelectorAll('#unsold-players-list .player-card');
+
+            players.forEach(player => {
+                const playerName = player.querySelector('h5').textContent.toLowerCase();
+                player.style.display = playerName.includes(searchTerm) ? 'block' : 'none';
+            });
+        });
+    </script>
+
+    <script>
+        const protocol = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
+        const auctionSocket = new WebSocket(protocol + window.location.host + '/ws/auction/');
+
+        auctionSocket.onmessage = function(e) {
+            const data = JSON.parse(e.data);
+            if (data.type === 'refresh_page') {
+                window.location.reload();
+            }
+        };
+        auctionSocket.onclose = function(e) {
+            console.error('Auction socket closed unexpectedly');
+        };
+    </script>
+</body>
+</html>
