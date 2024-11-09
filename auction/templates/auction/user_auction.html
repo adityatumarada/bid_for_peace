@@ -93,14 +93,24 @@
                 <div class="section-card">
                     <h2 class="section-title">Ongoing Auction</h2>
                     {% if ongoing_player %}
-                        <div class="player-card card mb-4">
-                            <div class="card-content">
-                                <h4 class="title is-5 has-text-weight-bold"><b>{{ ongoing_player.name }}</b></h4>
-                                <p class="subtitle" style="margin-bottom: 0;">Position: {{ ongoing_player.position }}</p>
-                                <p class="has-text-weight-semibold" style="margin-bottom: 0;">Base Price: ${{ ongoing_player.base_price }}</p>
-                                <p class="has-text-weight-semibold" style="margin-bottom: 0;">Description: {{ ongoing_player.description }}</p>
+                        <div class="d-flex align-items-center mb-4">
+                            <!-- Player Card -->
+                            <div class="player-card card me-4" style="flex: 1;">
+                                <div class="card-content">
+                                    <h4 class="title is-5 has-text-weight-bold"><b>{{ ongoing_player.name }}</b></h4>
+                                    <p class="subtitle" style="margin-bottom: 0;">Position: {{ ongoing_player.position }}</p>
+                                    <p class="has-text-weight-semibold" style="margin-bottom: 0;">Base Price: ${{ ongoing_player.base_price }}</p>
+                                    <p class="has-text-weight-semibold" style="margin-bottom: 0;">Description: {{ ongoing_player.description }}</p>
+                                </div>
                             </div>
+                            
+                            <!-- Place Bid Button -->
+                            <form method="POST" action="{% url 'place_bid' ongoing_player.id %}">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-custom">Place Bid</button>
+                            </form>
                         </div>
+                        
                         <h4>Bid History</h4>
                         <ul class="list-group mb-3" id="bid-history">
                             {% for bid in bids %}
@@ -111,10 +121,6 @@
                                 <li class="list-group-item">No bids yet.</li>
                             {% endfor %}
                         </ul>
-                        <form method="POST" action="{% url 'place_bid' ongoing_player.id %}">
-                            {% csrf_token %}
-                            <button type="submit" class="btn btn-custom">Place Bid</button>
-                        </form>
                     {% else %}
                         <p class="no-data">No ongoing auction.</p>
                     {% endif %}
