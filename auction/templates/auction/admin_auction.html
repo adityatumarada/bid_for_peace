@@ -31,35 +31,32 @@
         }
         .section-title {
             color: #007bff;
-            font-weight: bold; /* Added bold style */
+            font-weight: bold;
         }
         h1, h2, h3, h4, h5, h6 {
-            font-weight: bold; /* Ensure all headings are bold */
+            font-weight: bold;
         }
     </style>
 </head>
 <body>
 
-        <!-- Navbar with Logout Button -->
+    <!-- Navbar with Logout Button -->
     <nav class="navbar navbar-expand-lg navbar-light bg-light">
         <div class="container-fluid">
-        <a class="navbar-brand" href="#">Bid for Peace</a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navbarNav">
-            <ul class="navbar-nav ms-auto">
-            <!-- Other navbar links can go here -->
-            
-            <!-- Logout button -->
-            <li class="nav-item">
-                <a class="nav-link btn btn-outline-secondary" href="{% url 'logout' %}">Logout</a>
-            </li>
-            </ul>
-        </div>
+            <a class="navbar-brand" href="#">Bid for Peace</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <!-- Other navbar links can go here -->
+                    <li class="nav-item">
+                        <a class="nav-link btn btn-outline-secondary" href="{% url 'logout' %}">Logout</a>
+                    </li>
+                </ul>
+            </div>
         </div>
     </nav>
-  
 
     <div class="container mt-5">
         <h1 class="text-center">Bid for Peace</h1>
@@ -71,6 +68,9 @@
                     <h2 class="h5 section-title">Ongoing Auction</h2>
                     {% if ongoing_player %}
                         <p><strong>Player:</strong> {{ ongoing_player.name }}</p>
+                        <p><strong>Position:</strong> {{ ongoing_player.position }}</p>
+                        <p><strong>Bag:</strong> {{ ongoing_player.bag }}</p>
+                        <p><strong>Rating:</strong> {{ ongoing_player.rating }}</p>
                         <p><strong>Base Price:</strong> ${{ ongoing_player.base_price }}</p>
                         <h4 class="h6">Bid History</h4>
                         <ul class="list-unstyled">
@@ -89,16 +89,18 @@
                     {% endif %}
                 </div>
 
-                <!-- Unsold Players Section -->
+                <!-- Unsold Players Section with Pagination -->
                 <div class="player-card">
                     <h3 class="h5 section-title">Unsold Players</h3>
                     <input type="text" id="search-bar" class="form-control mb-3" placeholder="Search unsold players...">
                     <div id="unsold-players-list" class="row">
                         {% for player in unsold_players %}
-                            <div class="col-md-4">
+                            <div class="col-md-4 player-card-item">
                                 <div class="player-card">
                                     <h5 class="h6">{{ player.name }}</h5>
                                     <p>Position: {{ player.position }}</p>
+                                    <p>Bag: {{ player.bag }}</p>
+                                    <p>Rating: {{ player.rating }}</p>
                                     <p>Base Price: ${{ player.base_price }}</p>
                                     {% if not ongoing_player %}
                                         <a href="{% url 'start_auction' player.id %}" class="btn btn-primary">Start Auction</a>
@@ -109,6 +111,8 @@
                             <p class="no-data">No unsold players available.</p>
                         {% endfor %}
                     </div>
+                    <!-- Pagination Controls -->
+                    <div id="pagination-controls" class="d-flex justify-content-center mt-3"></div>
                 </div>
 
                 <!-- Sold Players Section -->
@@ -154,16 +158,70 @@
     <script>
         document.getElementById('search-bar').addEventListener('input', function() {
             const searchTerm = this.value.toLowerCase();
-            const players = document.querySelectorAll('#unsold-players-list .player-card');
+            const players = document.querySelectorAll('#unsold-players-list .player-card-item');
 
             players.forEach(player => {
                 const playerName = player.querySelector('h5').textContent.toLowerCase();
                 player.style.display = playerName.includes(searchTerm) ? 'block' : 'none';
             });
         });
-    </script>
 
-    <script>
+        // Pagination for Unsold Players
+        function applyPagination(itemsPerPage = 6) {
+            const items = Array.from(document.querySelectorAll('#unsold-players-list .player-card-item'));
+            const totalPages = Math.ceil(items.length / itemsPerPage);
+            let currentPage = 1;
+
+            function displayPage(page) {
+                const start = (page - 1) * itemsPerPage;
+                const end = page * itemsPerPage;
+                items.forEach((item, index) => {
+                    item.style.display = index >= start && index < end ? 'block' : 'none';
+                });
+            }
+
+            function updatePaginationControls() {
+                const paginationControls = document.getElementById('pagination-controls');
+                paginationControls.innerHTML = '';
+                const prevButton = document.createElement('button');
+                prevButton.textContent = 'Previous';
+                prevButton.disabled = currentPage === 1;
+                prevButton.onclick = () => {
+                    if (currentPage > 1) {
+                        currentPage--;
+                        displayPage(currentPage);
+                        updatePaginationControls();
+                    }
+                };
+                paginationControls.appendChild(prevButton);
+
+                const pageInfo = document.createElement('span');
+                pageInfo.classList.add('mx-2');
+                pageInfo.textContent = `Page ${currentPage} of ${totalPages}`;
+                paginationControls.appendChild(pageInfo);
+
+                const nextButton = document.createElement('button');
+                nextButton.textContent = 'Next';
+                nextButton.disabled = currentPage === totalPages;
+                nextButton.onclick = () => {
+                    if (currentPage < totalPages) {
+                        currentPage++;
+                        displayPage(currentPage);
+                        updatePaginationControls();
+                    }
+                };
+                paginationControls.appendChild(nextButton);
+            }
+
+            displayPage(currentPage);
+            updatePaginationControls();
+        }
+
+        // Initialize pagination when the page loads
+        window.onload = function() {
+            applyPagination();
+        };
+
         const protocol = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
         const auctionSocket = new WebSocket(protocol + window.location.host + '/ws/auction/');
 
@@ -173,9 +231,11 @@
                 window.location.reload();
             }
         };
+
         auctionSocket.onclose = function(e) {
             console.error('Auction socket closed unexpectedly');
         };
     </script>
+
 </body>
 </html>

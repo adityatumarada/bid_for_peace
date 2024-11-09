@@ -100,7 +100,7 @@
                                     <h4 class="title is-5 has-text-weight-bold"><b>{{ ongoing_player.name }}</b></h4>
                                     <p class="subtitle" style="margin-bottom: 0;">Position: {{ ongoing_player.position }}</p>
                                     <p class="has-text-weight-semibold" style="margin-bottom: 0;">Base Price: ${{ ongoing_player.base_price }}</p>
-                                    <p class="has-text-weight-semibold" style="margin-bottom: 0;">Description: {{ ongoing_player.description }}</p>
+                                    <p class="has-text-weight-semibold" style="margin-bottom: 0;">Rating: {{ ongoing_player.rating }}</p>
                                     <p class="has-text-weight-semibold" style="margin-bottom: 0;">Bag: {{ ongoing_player.bag }}</p>
                                 </div>
                             </div>
@@ -131,36 +131,41 @@
                 <div class="section-card">
                     <h3 class="section-title">Players Yet to Be Auctioned</h3>
                     <input type="text" id="search-bar-unsold" class="form-control mb-3" placeholder="Search unsold players...">
+                    
                     <div class="row" id="unsold-players-list">
                         {% for player in unsold_players %}
-                        <div class="column is-one-third col-md-4 mb-4" 
-                            data-player-name="{{ player.name|lower }}" 
-                            data-player-position="{{ player.position|lower }}" 
-                            data-player-bag="{{ player.bag|lower }}">
+                        <div class="col-md-4 mb-4 player-item" 
+                             data-player-name="{{ player.name|lower }}" 
+                             data-player-position="{{ player.position|lower }}" 
+                             data-player-bag="{{ player.bag|lower }}">
                             <div class="player-card card">
                                 <div class="card-content">
                                     <h5 class="title is-5"><b>{{ player.name }}</b></h5>
                                     <p class="subtitle" style="margin-bottom: 0;">Position: {{ player.position }}</p>
+                                    <p class="has-text-weight-semibold" style="margin-bottom: 0;">Rating: {{ player.rating }}</p>
                                     <p class="has-text-weight-semibold" style="margin-bottom: 0;">Base Price: ${{ player.base_price }}M</p>
                                     <p class="has-text-weight-semibold" style="margin-bottom: 0;">Bag: {{ player.bag }}</p>
                                 </div>
                             </div>
                         </div>
-                        {% empty %}
-                            <p class="no-data">Done with Auction.</p>
                         {% endfor %}
                     </div>
+                
+                    <!-- Pagination Controls -->
+                    <div id="unsold-pagination" class="d-flex justify-content-center mt-3"></div>
                 </div>
-
-                <!-- Sold Players Section -->
+                
+                
+                <!-- sold players -->
                 <div class="section-card">
                     <h3 class="section-title">Auctioned Players</h3>
                     <input type="text" id="search-bar-sold" class="form-control mb-3" placeholder="Search sold players...">
+                
                     <div class="row" id="sold-players-list">
                         {% for sale in sold_players %}
-                        <div class="column is-one-third col-md-4 mb-4" 
-                            data-player-name="{{ sale.player.name|lower }}" 
-                            data-team-name="{{ sale.team.name|lower|default:'unsold' }}">
+                        <div class="col-md-4 mb-4 sold-player-item" 
+                             data-player-name="{{ sale.player.name|lower }}" 
+                             data-team-name="{{ sale.team.name|lower|default:'unsold' }}">
                             <div class="player-card card">
                                 <div class="card-content">
                                     <h5 class="title is-5"><b>{{ sale.player.name }}</b></h5>
@@ -169,18 +174,20 @@
                                 </div>
                             </div>
                         </div>
-                        {% empty %}
-                            <p class="no-data">No players sold yet.</p>
                         {% endfor %}
                     </div>
+                
+                    <!-- Pagination Controls -->
+                    <div id="sold-pagination" class="d-flex justify-content-center mt-3"></div>
                 </div>
+                
             </div>
-
+            
             <!-- Right Column for Remaining Purse and My Buys -->
             <div class="col-md-4">
                 <div class="section-card mb-4">
                     <h3 class="section-title">My Team</h3>
-                    <p><strong>Remaining Purse:</strong> ${{ remaining_purse|floatformat:2 }} <br> <strong>Total Players:</strong> {{ my_total_players }} <br><strong>Non Legend Players:</strong> {{ my_total_non_legend_players }}</p>
+                    <p><strong>Remaining Purse:</strong> ${{ remaining_purse|floatformat:2 }}M <br> <strong>Total Players:</strong> {{ my_total_players }} <br><strong>Non Legend Players:</strong> {{ my_total_non_legend_players }}</p>
                 </div>
                 <div class="section-card">
                     <h3 class="section-title">My Buys</h3>
@@ -204,7 +211,7 @@
                                 <div class="player-card">
                                     <h5 class="card-title"><b>{{ team_name }}</b></h5>
                                     <br>
-                                    <p>Remaining Purse: ${{ data.remaining_purse|floatformat:2 }} <br> Total Players: {{ data.total_players }} <br> Non Legend Players: {{ data.non_legend_players }}</p>
+                                    <p>Remaining Purse: ${{ data.remaining_purse|floatformat:2 }}M <br> Total Players: {{ data.total_players }} <br> Non Legend Players: {{ data.non_legend_players }}</p>
                                 </div>
                             </div>
                         {% empty %}
@@ -289,6 +296,85 @@
 
         initWebSocket();
     </script>
+
+<script>
+    function filterAndPaginateItems(containerId, itemClass, paginationId, searchInputId, itemsPerPage = 10) {
+        const container = document.getElementById(containerId);
+        const items = Array.from(container.getElementsByClassName(itemClass));
+        const pagination = document.getElementById(paginationId);
+        const searchInput = document.getElementById(searchInputId);
+
+        function filterItems() {
+            const searchTerm = searchInput.value.toLowerCase();
+
+            const filteredItems = items.filter(item => {
+                const playerName = item.getAttribute('data-player-name') || '';
+                const playerPosition = item.getAttribute('data-player-position') || '';
+                const playerBag = item.getAttribute('data-player-bag') || '';
+                return playerName.includes(searchTerm) || playerPosition.includes(searchTerm) || playerBag.includes(searchTerm);
+            });
+
+            currentPage = 1;
+
+            displayPage(filteredItems);
+            updatePaginationControls(filteredItems);
+        }
+
+        function displayPage(filteredItems) {
+            const totalPages = Math.ceil(filteredItems.length / itemsPerPage);
+            const start = (currentPage - 1) * itemsPerPage;
+            const end = currentPage * itemsPerPage;
+            
+            items.forEach(item => item.style.display = 'none');
+
+            filteredItems.slice(start, end).forEach(item => item.style.display = 'block');
+        }
+
+        function updatePaginationControls(filteredItems) {
+            const totalPages = Math.ceil(filteredItems.length / itemsPerPage);
+            pagination.innerHTML = '';
+
+            if (totalPages > 1) {
+                const prevButton = document.createElement('button');
+                prevButton.className = 'btn btn-outline-secondary mx-1';
+                prevButton.innerText = 'Previous';
+                prevButton.disabled = currentPage === 1;
+                prevButton.onclick = () => {
+                    currentPage--;
+                    displayPage(filteredItems);
+                    updatePaginationControls(filteredItems);
+                };
+                pagination.appendChild(prevButton);
+
+                const pageInfo = document.createElement('span');
+                pageInfo.className = 'mx-2';
+                pageInfo.innerText = `Page ${currentPage} of ${totalPages}`;
+                pagination.appendChild(pageInfo);
+
+                const nextButton = document.createElement('button');
+                nextButton.className = 'btn btn-outline-secondary mx-1';
+                nextButton.innerText = 'Next';
+                nextButton.disabled = currentPage === totalPages;
+                nextButton.onclick = () => {
+                    currentPage++;
+                    displayPage(filteredItems);
+                    updatePaginationControls(filteredItems);
+                };
+                pagination.appendChild(nextButton);
+            }
+        }
+
+        filterItems();
+
+        searchInput.addEventListener('input', filterItems);
+    }
+
+    document.addEventListener("DOMContentLoaded", function() {
+        filterAndPaginateItems("unsold-players-list", "player-item", "unsold-pagination", "search-bar-unsold", 9); 
+        filterAndPaginateItems("sold-players-list", "sold-player-item", "sold-pagination", "search-bar-sold", 9); 
+    });
+</script>
+
 
 </body>
 </html>
