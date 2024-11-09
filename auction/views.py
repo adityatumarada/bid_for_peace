@@ -177,26 +177,27 @@ def place_bid(request, player_id):
         new_bid_amount = last_bid.price + Decimal('0.1') 
     else:
         new_bid_amount = ongoing_player.player.base_price  
-    
+
     user_team = request.user.team
-    total_spent = Sale.objects.filter(team=user_team, is_sold=True).aggregate(Sum('price'))['price__sum'] or 0
-    remaining_purse = user_team.purse - total_spent
-    
-    if remaining_purse >= new_bid_amount:
-        new_bid = Bid.objects.create(player=ongoing_player.player, team=user_team, price=new_bid_amount)
+    if last_bid.team != user_team:    
+        total_spent = Sale.objects.filter(team=user_team, is_sold=True).aggregate(Sum('price'))['price__sum'] or 0
+        remaining_purse = user_team.purse - total_spent
         
-        channel_layer = get_channel_layer()
-        async_to_sync(channel_layer.group_send)(
-            'auction_group',
-            {
-                'type': 'broadcast_new_bid',
-                'bid_data': {
-                    'team_name': user_team.name,
-                    'player_name': ongoing_player.player.name,
-                    'price': str(new_bid_amount)
+        if remaining_purse >= new_bid_amount:
+            new_bid = Bid.objects.create(player=ongoing_player.player, team=user_team, price=new_bid_amount)
+            
+            channel_layer = get_channel_layer()
+            async_to_sync(channel_layer.group_send)(
+                'auction_group',
+                {
+                    'type': 'broadcast_new_bid',
+                    'bid_data': {
+                        'team_name': user_team.name,
+                        'player_name': ongoing_player.player.name,
+                        'price': str(new_bid_amount)
+                    }
                 }
-            }
-        )
+            )
 
     return redirect('user_auction_view')
 

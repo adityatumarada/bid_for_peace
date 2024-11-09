@@ -207,6 +207,7 @@
 
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
     <script>
         document.getElementById('search-bar').addEventListener('input', function() {
             const searchTerm = this.value.toLowerCase();
@@ -219,36 +220,36 @@
         });
     </script>
 
-<script>
-    let auctionSocket;
-    function initWebSocket() {
-        const protocol = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
-        const auctionSocket = new WebSocket(protocol + window.location.host + '/ws/auction/');
-        auctionSocket.onopen = function(e) {
-            console.log('WebSocket connection established.');
-        };
-        auctionSocket.onmessage = function(e) {
-            const data = JSON.parse(e.data);
-            if (data.type === 'broadcast_new_bid') {
-                const bidHistory = document.getElementById('bid-history');
-                const newBid = document.createElement('li');
-                newBid.classList.add('list-group-item');
-                newBid.textContent = `${data.team_name} - $${data.price}M`;
-                bidHistory.insertBefore(newBid, bidHistory.firstChild);
-            } else if (data.type === 'refresh_page') {
-                window.location.reload();
-            }
-        };
-        auctionSocket.onclose = function(e) {
-            console.error('Auction socket closed unexpectedly');
-        };
-        auctionSocket.onerror = function(e) {
-            console.error('WebSocket error:', e);
-        };
-    }
+    <script>
+        let auctionSocket;
+        function initWebSocket() {
+            const protocol = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
+            const auctionSocket = new WebSocket(protocol + window.location.host + '/ws/auction/');
+            auctionSocket.onopen = function(e) {
+                console.log('WebSocket connection established.');
+            };
+            auctionSocket.onmessage = function(e) {
+                const data = JSON.parse(e.data);
+                if (data.type === 'broadcast_new_bid') {
+                    const bidHistory = document.getElementById('bid-history');
+                    const newBid = document.createElement('li');
+                    newBid.classList.add('list-group-item');
+                    newBid.textContent = `${data.team_name} - $${data.price}M`;
+                    bidHistory.insertBefore(newBid, bidHistory.firstChild);
+                } else if (data.type === 'refresh_page') {
+                    window.location.reload();
+                }
+            };
+            auctionSocket.onclose = function(e) {
+                console.error('Auction socket closed unexpectedly');
+            };
+            auctionSocket.onerror = function(e) {
+                console.error('WebSocket error:', e);
+            };
+        }
 
-    initWebSocket();
-</script>
+        initWebSocket();
+    </script>
 
 </body>
 </html>
