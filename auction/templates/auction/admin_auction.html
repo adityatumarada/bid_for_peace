@@ -39,6 +39,28 @@
     </style>
 </head>
 <body>
+
+        <!-- Navbar with Logout Button -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <div class="container-fluid">
+        <a class="navbar-brand" href="#">Bid for Peace</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ms-auto">
+            <!-- Other navbar links can go here -->
+            
+            <!-- Logout button -->
+            <li class="nav-item">
+                <a class="nav-link btn btn-outline-secondary" href="{% url 'logout' %}">Logout</a>
+            </li>
+            </ul>
+        </div>
+        </div>
+    </nav>
+  
+
     <div class="container mt-5">
         <h1 class="text-center">Bid for Peace</h1>
         <div class="row">
