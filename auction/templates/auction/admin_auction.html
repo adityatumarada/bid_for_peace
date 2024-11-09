@@ -135,11 +135,11 @@
                 <div class="player-card">
                     <h3 class="h5 section-title">Team Remaining Purses</h3>
                     <div class="row">
-                        {% for team_name, purse in team_data.items %}
+                        {% for team_name, data in team_data.items %}
                             <div class="col-12">
                                 <div class="player-card">
                                     <h5 class="h6">{{ team_name }}</h5>
-                                    <p>Remaining Purse: ${{ purse }}</p>
+                                    <p>Remaining Purse: ${{ data.remaining_purse }} <br> Total Players: {{ data.total_players }} <br> Non Legend Players: {{ data.non_legend_players }}</p>
                                 </div>
                             </div>
                         {% empty %}

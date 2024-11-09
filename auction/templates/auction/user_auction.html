@@ -101,6 +101,7 @@
                                     <p class="subtitle" style="margin-bottom: 0;">Position: {{ ongoing_player.position }}</p>
                                     <p class="has-text-weight-semibold" style="margin-bottom: 0;">Base Price: ${{ ongoing_player.base_price }}</p>
                                     <p class="has-text-weight-semibold" style="margin-bottom: 0;">Description: {{ ongoing_player.description }}</p>
+                                    <p class="has-text-weight-semibold" style="margin-bottom: 0;">Bag: {{ ongoing_player.bag }}</p>
                                 </div>
                             </div>
                             
@@ -128,36 +129,46 @@
 
                 <!-- Unsold Players Section -->
                 <div class="section-card">
-                    <h3 class="section-title">Unsold Players</h3>
-                    <input type="text" id="search-bar" class="form-control mb-3" placeholder="Search unsold players...">
+                    <h3 class="section-title">Players Yet to Be Auctioned</h3>
+                    <input type="text" id="search-bar-unsold" class="form-control mb-3" placeholder="Search unsold players...">
                     <div class="row" id="unsold-players-list">
                         {% for player in unsold_players %}
-                        <div class="column is-one-third col-md-4 mb-4" data-player-name="{{ player.name|lower }}">
+                        <div class="column is-one-third col-md-4 mb-4" 
+                            data-player-name="{{ player.name|lower }}" 
+                            data-player-position="{{ player.position|lower }}" 
+                            data-player-bag="{{ player.bag|lower }}">
                             <div class="player-card card">
                                 <div class="card-content">
                                     <h5 class="title is-5"><b>{{ player.name }}</b></h5>
                                     <p class="subtitle" style="margin-bottom: 0;">Position: {{ player.position }}</p>
                                     <p class="has-text-weight-semibold" style="margin-bottom: 0;">Base Price: ${{ player.base_price }}M</p>
+                                    <p class="has-text-weight-semibold" style="margin-bottom: 0;">Bag: {{ player.bag }}</p>
                                 </div>
                             </div>
                         </div>
                         {% empty %}
-                            <p class="no-data">No unsold players available.</p>
+                            <p class="no-data">Done with Auction.</p>
                         {% endfor %}
                     </div>
                 </div>
 
                 <!-- Sold Players Section -->
                 <div class="section-card">
-                    <h3 class="section-title">Sold Players</h3>
-                    <div class="row">
+                    <h3 class="section-title">Auctioned Players</h3>
+                    <input type="text" id="search-bar-sold" class="form-control mb-3" placeholder="Search sold players...">
+                    <div class="row" id="sold-players-list">
                         {% for sale in sold_players %}
-                            <div class="player-card card col-md-4 mb-4">
+                        <div class="column is-one-third col-md-4 mb-4" 
+                            data-player-name="{{ sale.player.name|lower }}" 
+                            data-team-name="{{ sale.team.name|lower|default:'unsold' }}">
+                            <div class="player-card card">
                                 <div class="card-content">
                                     <h5 class="title is-5"><b>{{ sale.player.name }}</b></h5>
-                                    <p class="subtitle">{{ sale.team.name }} for ${{ sale.price }}M</p>
+                                    <p class="has-text-weight-semibold" style="margin-bottom: 0;">Team: {{ sale.team.name|default:"Unsold" }}</p>
+                                    <p class="has-text-weight-semibold" style="margin-bottom: 0;">Price: ${{ sale.price }}M</p>
                                 </div>
                             </div>
+                        </div>
                         {% empty %}
                             <p class="no-data">No players sold yet.</p>
                         {% endfor %}
@@ -169,7 +180,7 @@
             <div class="col-md-4">
                 <div class="section-card mb-4">
                     <h3 class="section-title">My Team</h3>
-                    <p><strong>Remaining:</strong> ${{ remaining_purse }}</p>
+                    <p><strong>Remaining Purse:</strong> ${{ remaining_purse|floatformat:2 }} <br> <strong>Total Players:</strong> {{ my_total_players }} <br><strong>Non Legend Players:</strong> {{ my_total_non_legend_players }}</p>
                 </div>
                 <div class="section-card">
                     <h3 class="section-title">My Buys</h3>
@@ -177,8 +188,7 @@
                         {% for sale in bought_players %}
                             <div class="col-md-12 mb-3">
                                 <div class="player-card">
-                                    <h5 class="card-title">{{ sale.player.name }}</h5>
-                                    <p>Price: ${{ sale.price }}</p>
+                                    <h5 class="card-title"><b>{{ sale.player.name }}</b> - ${{ sale.price }}</h5>
                                 </div>
                             </div>
                         {% empty %}
@@ -187,13 +197,14 @@
                     </div>
                 </div>
                 <div class="section-card">
-                    <h3 class="section-title">Total Remaining Purses</h3>
+                    <h3 class="section-title">All Teams</h3>
                     <div class="row">
-                        {% for team_name, purse in team_data.items %}
+                        {% for team_name, data in team_data.items %}
                             <div class="col-12 mb-3">
                                 <div class="player-card">
-                                    <h5 class="card-title">{{ team_name }}</h5>
-                                    <p>Remaining Purse: ${{ purse }}</p>
+                                    <h5 class="card-title"><b>{{ team_name }}</b></h5>
+                                    <br>
+                                    <p>Remaining Purse: ${{ data.remaining_purse|floatformat:2 }} <br> Total Players: {{ data.total_players }} <br> Non Legend Players: {{ data.non_legend_players }}</p>
                                 </div>
                             </div>
                         {% empty %}
@@ -209,16 +220,44 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     
     <script>
-        document.getElementById('search-bar').addEventListener('input', function() {
+        // Function to filter Unsold Players
+        document.getElementById('search-bar-unsold').addEventListener('input', function() {
             const searchTerm = this.value.toLowerCase();
-            const players = document.querySelectorAll('#unsold-players-list .col-md-4');
-
-            players.forEach(player => {
+            const unsoldPlayers = document.querySelectorAll('#unsold-players-list .col-md-4');
+    
+            unsoldPlayers.forEach(player => {
                 const playerName = player.getAttribute('data-player-name');
-                player.style.display = playerName.includes(searchTerm) ? 'block' : 'none';
+                const playerPosition = player.getAttribute('data-player-position');
+                const playerBag = player.getAttribute('data-player-bag');
+                
+                // Check if any attribute contains the search term
+                if (playerName.includes(searchTerm) || playerPosition.includes(searchTerm) || playerBag.includes(searchTerm)) {
+                    player.style.display = 'block';
+                } else {
+                    player.style.display = 'none';
+                }
             });
         });
+    
+        // Function to filter Sold Players
+        document.getElementById('search-bar-sold').addEventListener('input', function() {
+        const searchTerm = this.value.toLowerCase();
+        const soldPlayers = document.querySelectorAll('#sold-players-list .col-md-4');
+
+        soldPlayers.forEach(player => {
+            const playerName = player.getAttribute('data-player-name');
+            const teamName = player.getAttribute('data-team-name');
+            
+            // Check if any attribute contains the search term
+            if (playerName.includes(searchTerm) || teamName.includes(searchTerm)) {
+                player.style.display = 'block';
+            } else {
+                player.style.display = 'none';
+            }
+        });
+    });
     </script>
+    
 
     <script>
         let auctionSocket;

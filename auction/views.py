@@ -1,5 +1,3 @@
-# views.py
-
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
@@ -56,7 +54,15 @@ def admin_auction_view(request):
     for team in teams:
         total_spent = Sale.objects.filter(team=team, is_sold=True).aggregate(Sum('price'))['price__sum'] or 0
         remaining_purse = team.purse - total_spent
-        team_data[team.name] = remaining_purse
+        team_players = Sale.objects.filter(team=team, is_sold=True)
+        total_players = team_players.count() or 0
+        non_legend_players = team_players.filter(player__legend=False).count() or 0
+
+        team_data[team.name] = {
+            'remaining_purse': remaining_purse,
+            'total_players': total_players,
+            'non_legend_players': non_legend_players
+        }
 
     bids = []
 
@@ -88,7 +94,15 @@ def user_auction_view(request):
     for team in teams:
         total_spent = Sale.objects.filter(team=team, is_sold=True).aggregate(Sum('price'))['price__sum'] or 0
         remaining_purse = team.purse - total_spent
-        team_data[team.name] = remaining_purse
+        team_players = Sale.objects.filter(team=team, is_sold=True)
+        total_players = team_players.count() or 0
+        non_legend_players = team_players.filter(player__legend=False).count() or 0
+        
+        team_data[team.name] = {
+            'remaining_purse': remaining_purse,
+            'total_players': total_players,
+            'non_legend_players': non_legend_players
+        }
 
     bids = []
     bought_players = [] 
@@ -104,6 +118,8 @@ def user_auction_view(request):
         if not cost:
             cost = Decimal('0.0')
         remaining_purse = user_team.purse - cost
+        my_total_players = bought_players.count() or 0
+        my_total_non_legend_players = bought_players.filter(player__legend=False).count() or 0
     except Team.DoesNotExist:
         bought_players = [] 
 
@@ -114,7 +130,9 @@ def user_auction_view(request):
         'ongoing_player': ongoing_player.player if ongoing_player else None,
         'bids': bids,
         'team_data': team_data,
-        'bought_players': bought_players,  
+        'bought_players': bought_players,
+        'my_total_players': my_total_players,
+        'my_total_non_legend_players': my_total_non_legend_players,
         'remaining_purse': remaining_purse
     })
 
@@ -179,7 +197,7 @@ def place_bid(request, player_id):
         new_bid_amount = ongoing_player.player.base_price  
 
     user_team = request.user.team
-    if last_bid.team != user_team:    
+    if not last_bid or  last_bid.team != user_team:    
         total_spent = Sale.objects.filter(team=user_team, is_sold=True).aggregate(Sum('price'))['price__sum'] or 0
         remaining_purse = user_team.purse - total_spent
         
@@ -200,6 +218,3 @@ def place_bid(request, player_id):
             )
 
     return redirect('user_auction_view')
-
-
-
