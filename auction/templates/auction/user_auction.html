@@ -190,8 +190,12 @@
                     <p><strong>Remaining Purse:</strong> ${{ remaining_purse|floatformat:2 }}M <br> <strong>Total Players:</strong> {{ my_total_players }} <br><strong>Non Legend Players:</strong> {{ my_total_non_legend_players }}</p>
                 </div>
                 <div class="section-card">
-                    <h3 class="section-title">My Buys</h3>
-                    <div class="row">
+                    <!-- Clickable Title -->
+                    <h3 class="section-title" style="cursor: pointer;" onclick="toggleCollapse('myBuysList')">My Buys</h3>
+                
+                    <!-- Collapsible Content -->
+                    <div class="collapse" id="myBuysList">
+                        <div class="row">
                             <div class="col-md-12 mb-3">
                                 {% for sale in bought_players %}
                                 <div class="player-card">
@@ -201,8 +205,16 @@
                                     <p class="no-data">No players bought yet.</p>
                                 {% endfor %}
                             </div>
+                        </div>
                     </div>
                 </div>
+                <script>
+                    function toggleCollapse(id) {
+                        const element = document.getElementById(id);
+                        element.classList.toggle('collapse');
+                        element.classList.toggle('show');
+                    }
+                </script>
                 <div class="section-card">
                     <h3 class="section-title">All Teams</h3>
                     <div class="row">
@@ -333,8 +345,8 @@
     }
 
     document.addEventListener("DOMContentLoaded", function() {
-        filterAndPaginateItems("unsold-players-list", "player-item", "unsold-pagination", "search-bar-unsold", 12); 
-        filterAndPaginateItems("sold-players-list", "sold-player-item", "sold-pagination", "search-bar-sold", 12); 
+        filterAndPaginateItems("unsold-players-list", "player-item", "unsold-pagination", "search-bar-unsold", 9); 
+        filterAndPaginateItems("sold-players-list", "sold-player-item", "sold-pagination", "search-bar-sold", 9); 
     });
 </script>
 

@@ -3,239 +3,401 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Peace Premier League</title>
+    <title>Peace Premier League Auction</title>
 
     <!-- Bootstrap CSS -->
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+
+    <!-- Custom Styles -->
     <style>
         body {
+            font-family: 'Roboto', sans-serif;
             background-color: #f4f4f4;
-            font-family: Arial, sans-serif;
+            color: #333;
+            line-height: 1.6;
+        }
+        .container {
+            margin-top: 50px;
+        }
+        .section-card {
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            margin-bottom: 30px;
         }
         .player-card {
-            background-color: white;
-            border-radius: 8px;
-            padding: 20px;
-            margin-bottom: 20px;
+            background-color: #fff;
+            border-radius: 10px;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
             transition: transform 0.2s;
+            padding: 20px;
+            margin-bottom: 20px;
         }
         .player-card:hover {
-            transform: translateY(-2px);
+            transform: scale(1.02);
+        }
+        .section-title {
+            margin-bottom: 20px;
+            font-weight: 700;
+            color: #007bff;
+        }
+        .btn-custom {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 25px;
+            padding: 10px 20px;
+            font-size: 16px;
+        }
+        .btn-custom:hover {
+            background-color: #0056b3;
         }
         .no-data {
             text-align: center;
             color: #6c757d;
             margin: 20px 0;
         }
-        .section-title {
-            color: #007bff;
-            font-weight: bold;
-        }
-        h1, h2, h3, h4, h5, h6 {
-            font-weight: bold;
-        }
     </style>
 </head>
 <body>
-
-    <!-- Navbar with Logout Button -->
+        <!-- Navbar with Logout Button -->
     <nav class="navbar navbar-expand-lg navbar-light bg-light">
         <div class="container-fluid">
-            <a class="navbar-brand" href="#">Bid for Peace</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
-                    <!-- Other navbar links can go here -->
-                    <li class="nav-item">
-                        <a class="nav-link btn btn-outline-secondary" href="{% url 'logout' %}">Logout</a>
-                    </li>
-                </ul>
-            </div>
+        <a class="navbar-brand" href="#">Bid for Peace</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ms-auto">
+            <!-- Other navbar links can go here -->
+            
+            <!-- Logout button -->
+            <li class="nav-item">
+                <a class="nav-link btn btn-outline-secondary" href="{% url 'logout' %}">Logout</a>
+            </li>
+            </ul>
+        </div>
         </div>
     </nav>
-
-    <div class="container mt-5">
-        <h1 class="text-center">Bid for Peace</h1>
+  
+    <div class="container">
+        <h1 class="text-center mb-4"><b>Bid for Peace</b></h1>
         <div class="row">
             <!-- Left Column for Auction Sections -->
             <div class="col-md-8">
                 <!-- Ongoing Auction Section -->
-                <div class="player-card">
-                    <h2 class="h5 section-title">Ongoing Auction</h2>
+                <div class="section-card">
+                    <h2 class="section-title">Ongoing Auction</h2>
                     {% if ongoing_player %}
-                        <p><strong>Player:</strong> {{ ongoing_player.name }}</p>
-                        <p><strong>Position:</strong> {{ ongoing_player.position }}</p>
-                        <p><strong>Bag:</strong> {{ ongoing_player.bag }}</p>
-                        <p><strong>Rating:</strong> {{ ongoing_player.rating }}</p>
-                        <p><strong>Base Price:</strong> ${{ ongoing_player.base_price }}</p>
-                        <h4 class="h6">Bid History</h4>
-                        <ul class="list-unstyled">
+                        <div class="d-flex align-items-center mb-4">
+                            <!-- Player Card -->
+                            <div class="player-card card me-4" style="flex: 1;">
+                                <div class="card-content">
+                                    <h4 class="title is-5 has-text-weight-bold"><b>{{ ongoing_player.name }}{% if not ongoing_player.legend %} (NL){% else %} (L){% endif %}</b></h4>
+                                    <p class="subtitle" style="margin-bottom: 0;">Position: {{ ongoing_player.position }}</p>
+                                    <p class="has-text-weight-semibold" style="margin-bottom: 0;">Base Price: ${{ ongoing_player.base_price }}</p>
+                                    <p class="has-text-weight-semibold" style="margin-bottom: 0;">Rating: {{ ongoing_player.rating }}</p>
+                                    <p class="has-text-weight-semibold" style="margin-bottom: 0;">Bag: {{ ongoing_player.bag }}</p>
+                                </div>
+                            </div>
+                            
+                            <!-- Place Bid Button -->
+                            <form method="POST" action="{% url 'end_auction' ongoing_player.id %}">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-danger"> End Auction </button>
+                            </form>
+                        </div>
+                        
+                        <h4>Bid History</h4>
+                        <ul class="list-group mb-3" id="bid-history">
                             {% for bid in bids %}
-                                <li>Team: {{ bid.team.name }} - Bid: ${{ bid.price }}</li>
+                                <li class="list-group-item">
+                                    {{ bid.team.name }} - ${{ bid.price }}M
+                                </li>
                             {% empty %}
-                                <li>No bids yet.</li>
+                                <li class="list-group-item">No bids yet.</li>
                             {% endfor %}
                         </ul>
-                        <form method="POST" action="{% url 'end_auction' ongoing_player.id %}" class="mt-3">
-                            {% csrf_token %}
-                            <button type="submit" class="btn btn-danger">End Auction</button>
-                        </form>
                     {% else %}
                         <p class="no-data">No ongoing auction.</p>
                     {% endif %}
                 </div>
 
-                <!-- Unsold Players Section with Pagination -->
-                <div class="player-card">
-                    <h3 class="h5 section-title">Unsold Players</h3>
-                    <input type="text" id="search-bar" class="form-control mb-3" placeholder="Search unsold players...">
-                    <div id="unsold-players-list" class="row">
+                <!-- Unsold Players Section -->
+                <div class="section-card">
+                    <h3 class="section-title">Players Yet to Be Auctioned</h3>
+                    <input type="text" id="search-bar-unsold" class="form-control mb-3" placeholder="Search unsold players...">
+                    
+                    <div class="row" id="unsold-players-list">
                         {% for player in unsold_players %}
-                            <div class="col-md-4 player-card-item">
-                                <div class="player-card">
-                                    <h5 class="h6">{{ player.name }}</h5>
-                                    <p>Position: {{ player.position }}</p>
-                                    <p>Bag: {{ player.bag }}</p>
-                                    <p>Rating: {{ player.rating }}</p>
-                                    <p>Base Price: ${{ player.base_price }}</p>
+                        <div class="col-md-4 mb-4 player-item" 
+                             data-player-name="{{ player.name|lower }}" 
+                             data-player-position="{{ player.position|lower }}" 
+                             data-player-bag="{{ player.bag|lower }}">
+                            <div class="player-card card">
+                                <div class="card-content">
+                                    <h5 class="title is-5"><b>{{ player.name }}{% if not player.legend %} (NL){% else %} (L){% endif %}</b></h5>
+                                    <p class="subtitle" style="margin-bottom: 0;">Position: {{ player.position }}</p>
+                                    <p class="has-text-weight-semibold" style="margin-bottom: 0;">Rating: {{ player.rating }}</p>
+                                    <p class="has-text-weight-semibold" style="margin-bottom: 0;">Base Price: ${{ player.base_price }}M</p>
+                                    <p class="has-text-weight-semibold" style="margin-bottom: 0;">Bag: {{ player.bag }}</p>
+                                    
                                     {% if not ongoing_player %}
-                                        <a href="{% url 'start_auction' player.id %}" class="btn btn-primary">Start Auction</a>
+                                    <form method="POST" action="{% url 'start_auction' player.id %}">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-success mt-3">Start Auction</button>
+                                    </form>
                                     {% endif %}
                                 </div>
                             </div>
-                        {% empty %}
-                            <p class="no-data">No unsold players available.</p>
+                        </div>
                         {% endfor %}
                     </div>
+                
                     <!-- Pagination Controls -->
-                    <div id="pagination-controls" class="d-flex justify-content-center mt-3"></div>
+                    <div id="unsold-pagination" class="d-flex justify-content-center mt-3"></div>
                 </div>
-
-                <!-- Sold Players Section -->
-                <div class="player-card">
-                    <h3 class="h5 section-title">Sold Players</h3>
-                    <div class="row">
+                
+                
+                <!-- sold players -->
+                <div class="section-card">
+                    <h3 class="section-title">Auctioned Players</h3>
+                    <input type="text" id="search-bar-sold" class="form-control mb-3" placeholder="Search sold players...">
+                
+                    <div class="row" id="sold-players-list">
                         {% for sale in sold_players %}
-                            <div class="col-md-4">
-                                <div class="player-card">
-                                    <h5 class="h6">{{ sale.player.name }}</h5>
-                                    <p>Sold to: {{ sale.team.name }}</p>
-                                    <p>Sold Price: ${{ sale.price }}</p>
+                        <div class="col-md-4 mb-4 sold-player-item" 
+                             data-player-name="{{ sale.player.name|lower }}" 
+                             data-team-name="{{ sale.team.name|lower|default:'unsold' }}">
+                            <div class="player-card card">
+                                <div class="card-content">
+                                    <h5 class="title is-5"><b>{{ sale.player.name }}{% if not sale.player.legend %} (NL){% else %} (L){% endif %}</b></h5>
+                                    <p class="has-text-weight-semibold" style="margin-bottom: 0;">{{ sale.team.name|default:"Unsold" }}</p>
+                                    <p class="has-text-weight-semibold" style="margin-bottom: 0;">Price: ${{ sale.price }}M</p>
                                 </div>
                             </div>
-                        {% empty %}
-                            <p class="no-data">No players sold yet.</p>
+                        </div>
                         {% endfor %}
                     </div>
+                
+                    <!-- Pagination Controls -->
+                    <div id="sold-pagination" class="d-flex justify-content-center mt-3"></div>
                 </div>
+                
             </div>
+            
 
-            <!-- Right Column for Team Remaining Purses -->
+            
+
+            
+            <!-- Right Column for Remaining Purse and My Buys -->
             <div class="col-md-4">
-                <div class="player-card">
-                    <h3 class="h5 section-title">Team Remaining Purses</h3>
+                <div class="section-card">
+                    <h3 class="section-title">Draw player from the Bag</h3>
+                    <div class="mb-3">
+                        <label for="bag-select" class="form-label">Select Bag</label>
+                        <select id="bag-select" class="form-select">
+                            <option value="" disabled selected>Select a Bag</option>
+                            <!-- Options will be populated by JavaScript -->
+                        </select>
+                    </div>
+                    <button type="button" class="btn btn-warning" id="randomise-btn">Randomise</button>
+    
+                    <!-- Random Player Display -->
+                    <div id="random-player-display" class="mt-3"></div>
+                </div>
+
+                <div class="section-card">
+                    <h3 class="section-title">All Teams</h3>
                     <div class="row">
-                        {% for team_name, data in team_data.items %}
-                            <div class="col-12">
+                            <div class="col-12 mb-3">
+                                {% for team_name, data in team_data.items %}
                                 <div class="player-card">
-                                    <h5 class="h6">{{ team_name }}</h5>
-                                    <p>Remaining Purse: ${{ data.remaining_purse }} <br> Total Players: {{ data.total_players }} <br> Non Legend Players: {{ data.non_legend_players }}</p>
+                                    <h5 class="card-title"><b>{{ team_name }}</b></h5>
+                                    <br>
+                                    <p>Remaining Purse: ${{ data.remaining_purse|floatformat:2 }}M <br> Total Players: {{ data.total_players }} <br> Non Legend Players: {{ data.non_legend_players }}</p>
                                 </div>
+                                {% empty %}
+                                    <p class="no-data">No teams available.</p>
+                                {% endfor %}
                             </div>
-                        {% empty %}
-                            <p class="no-data">No teams available.</p>
-                        {% endfor %}
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    
+
     <script>
-        document.getElementById('search-bar').addEventListener('input', function() {
-            const searchTerm = this.value.toLowerCase();
-            const players = document.querySelectorAll('#unsold-players-list .player-card-item');
-
-            players.forEach(player => {
-                const playerName = player.querySelector('h5').textContent.toLowerCase();
-                player.style.display = playerName.includes(searchTerm) ? 'block' : 'none';
-            });
-        });
-
-        // Pagination for Unsold Players
-        function applyPagination(itemsPerPage = 6) {
-            const items = Array.from(document.querySelectorAll('#unsold-players-list .player-card-item'));
-            const totalPages = Math.ceil(items.length / itemsPerPage);
-            let currentPage = 1;
-
-            function displayPage(page) {
-                const start = (page - 1) * itemsPerPage;
-                const end = page * itemsPerPage;
-                items.forEach((item, index) => {
-                    item.style.display = index >= start && index < end ? 'block' : 'none';
-                });
-            }
-
-            function updatePaginationControls() {
-                const paginationControls = document.getElementById('pagination-controls');
-                paginationControls.innerHTML = '';
-                const prevButton = document.createElement('button');
-                prevButton.textContent = 'Previous';
-                prevButton.disabled = currentPage === 1;
-                prevButton.onclick = () => {
-                    if (currentPage > 1) {
-                        currentPage--;
-                        displayPage(currentPage);
-                        updatePaginationControls();
-                    }
-                };
-                paginationControls.appendChild(prevButton);
-
-                const pageInfo = document.createElement('span');
-                pageInfo.classList.add('mx-2');
-                pageInfo.textContent = `Page ${currentPage} of ${totalPages}`;
-                paginationControls.appendChild(pageInfo);
-
-                const nextButton = document.createElement('button');
-                nextButton.textContent = 'Next';
-                nextButton.disabled = currentPage === totalPages;
-                nextButton.onclick = () => {
-                    if (currentPage < totalPages) {
-                        currentPage++;
-                        displayPage(currentPage);
-                        updatePaginationControls();
-                    }
-                };
-                paginationControls.appendChild(nextButton);
-            }
-
-            displayPage(currentPage);
-            updatePaginationControls();
+        let auctionSocket;
+        function initWebSocket() {
+            const protocol = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
+            const auctionSocket = new WebSocket(protocol + window.location.host + '/ws/auction/');
+            auctionSocket.onopen = function(e) {
+                console.log('WebSocket connection established.');
+            };
+            auctionSocket.onmessage = function(e) {
+                const data = JSON.parse(e.data);
+                if (data.type === 'broadcast_new_bid') {
+                    const bidHistory = document.getElementById('bid-history');
+                    const newBid = document.createElement('li');
+                    newBid.classList.add('list-group-item');
+                    newBid.textContent = `${data.team_name} - $${data.price}M`;
+                    bidHistory.insertBefore(newBid, bidHistory.firstChild);
+                } else if (data.type === 'refresh_page') {
+                    window.location.reload();
+                }
+            };
+            auctionSocket.onclose = function(e) {
+                console.error('Auction socket closed unexpectedly');
+            };
+            auctionSocket.onerror = function(e) {
+                console.error('WebSocket error:', e);
+            };
         }
 
-        // Initialize pagination when the page loads
-        window.onload = function() {
-            applyPagination();
-        };
-
-        const protocol = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
-        const auctionSocket = new WebSocket(protocol + window.location.host + '/ws/auction/');
-
-        auctionSocket.onmessage = function(e) {
-            const data = JSON.parse(e.data);
-            if (data.type === 'refresh_page') {
-                window.location.reload();
-            }
-        };
-
-        auctionSocket.onclose = function(e) {
-            console.error('Auction socket closed unexpectedly');
-        };
+        initWebSocket();
     </script>
+
+<script>
+    function filterAndPaginateItems(containerId, itemClass, paginationId, searchInputId, itemsPerPage = 10) {
+        const container = document.getElementById(containerId);
+        const items = Array.from(container.getElementsByClassName(itemClass));
+        const pagination = document.getElementById(paginationId);
+        const searchInput = document.getElementById(searchInputId);
+
+        function filterItems() {
+            const searchTerm = searchInput.value.toLowerCase();
+
+            const filteredItems = items.filter(item => {
+                const playerName = item.getAttribute('data-player-name') || '';
+                const playerPosition = item.getAttribute('data-player-position') || '';
+                const playerBag = item.getAttribute('data-player-bag') || '';
+                const teamName = item.getAttribute('data-team-name') || '';
+                return playerName.includes(searchTerm) || playerPosition.includes(searchTerm) || playerBag.includes(searchTerm) || teamName.includes(searchTerm);
+            });
+
+            currentPage = 1;
+
+            displayPage(filteredItems);
+            updatePaginationControls(filteredItems);
+        }
+
+        function displayPage(filteredItems) {
+            const totalPages = Math.ceil(filteredItems.length / itemsPerPage);
+            const start = (currentPage - 1) * itemsPerPage;
+            const end = currentPage * itemsPerPage;
+            
+            items.forEach(item => item.style.display = 'none');
+
+            filteredItems.slice(start, end).forEach(item => item.style.display = 'block');
+        }
+
+        function updatePaginationControls(filteredItems) {
+            const totalPages = Math.ceil(filteredItems.length / itemsPerPage);
+            pagination.innerHTML = '';
+
+            if (totalPages > 1) {
+                const prevButton = document.createElement('button');
+                prevButton.className = 'btn btn-outline-secondary mx-1';
+                prevButton.innerText = 'Previous';
+                prevButton.disabled = currentPage === 1;
+                prevButton.onclick = () => {
+                    currentPage--;
+                    displayPage(filteredItems);
+                    updatePaginationControls(filteredItems);
+                };
+                pagination.appendChild(prevButton);
+
+                const pageInfo = document.createElement('span');
+                pageInfo.className = 'mx-2';
+                pageInfo.innerText = `Page ${currentPage} of ${totalPages}`;
+                pagination.appendChild(pageInfo);
+
+                const nextButton = document.createElement('button');
+                nextButton.className = 'btn btn-outline-secondary mx-1';
+                nextButton.innerText = 'Next';
+                nextButton.disabled = currentPage === totalPages;
+                nextButton.onclick = () => {
+                    currentPage++;
+                    displayPage(filteredItems);
+                    updatePaginationControls(filteredItems);
+                };
+                pagination.appendChild(nextButton);
+            }
+        }
+
+        filterItems();
+
+        searchInput.addEventListener('input', filterItems);
+    }
+
+    document.addEventListener("DOMContentLoaded", function() {
+        filterAndPaginateItems("unsold-players-list", "player-item", "unsold-pagination", "search-bar-unsold", 9); 
+        filterAndPaginateItems("sold-players-list", "sold-player-item", "sold-pagination", "search-bar-sold", 9); 
+    });
+
+    document.addEventListener("DOMContentLoaded", function() {
+    // Get all unsold players
+    const unsoldPlayers = Array.from(document.getElementsByClassName('player-item'));
+
+    // Extract unique bags
+    const bags = [...new Set(unsoldPlayers.map(player => player.getAttribute('data-player-bag')))];
+    
+    // Populate the bag dropdown
+    const bagSelect = document.getElementById('bag-select');
+    bags.forEach(bag => {
+        const option = document.createElement('option');
+        option.value = bag;
+        option.textContent = bag;
+        bagSelect.appendChild(option);
+    });
+
+    // Randomise button functionality
+    document.getElementById('randomise-btn').addEventListener('click', function() {
+        const selectedBag = bagSelect.value;
+
+        // Check if a bag is selected
+        if (!selectedBag) {
+            alert("Please select a bag.");
+            return;
+        }
+
+        // Filter players by selected bag
+        const playersInSelectedBag = unsoldPlayers.filter(item => item.getAttribute('data-player-bag') === selectedBag);
+
+        if (playersInSelectedBag.length === 0) {
+            document.getElementById('random-player-display').innerHTML = "<p>No players found in this bag.</p>";
+            return;
+        }
+
+        // Randomly select a player
+        const randomPlayer = playersInSelectedBag[Math.floor(Math.random() * playersInSelectedBag.length)];
+
+        // Extract player details
+        const playerName = randomPlayer.querySelector('.title').innerText;
+        const playerPosition = randomPlayer.querySelector('.subtitle').innerText;
+        const playerBasePrice = randomPlayer.querySelector('.has-text-weight-semibold').innerText.split(':')[1];
+
+        // Display selected player
+        document.getElementById('random-player-display').innerHTML = `
+            <h5>Random Player: ${playerName}</h5>
+            <p>Position: ${playerPosition}</p>
+            <p>Base Price: ${playerBasePrice}</p>
+        `;
+    });
+});
+
+</script>
+
 
 </body>
 </html>
