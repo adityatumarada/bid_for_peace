@@ -195,7 +195,7 @@
                         {% for sale in bought_players %}
                             <div class="col-md-12 mb-3">
                                 <div class="player-card">
-                                    <h5 class="card-title"><b>{{ sale.player.name }}</b> - ${{ sale.price }}</h5>
+                                    <h5 class="card-title"><b>{{ sale.player.name }}</b> - ${{ sale.price }}M</h5>
                                 </div>
                             </div>
                         {% empty %}
@@ -370,8 +370,8 @@
     }
 
     document.addEventListener("DOMContentLoaded", function() {
-        filterAndPaginateItems("unsold-players-list", "player-item", "unsold-pagination", "search-bar-unsold", 9); 
-        filterAndPaginateItems("sold-players-list", "sold-player-item", "sold-pagination", "search-bar-sold", 9); 
+        filterAndPaginateItems("unsold-players-list", "player-item", "unsold-pagination", "search-bar-unsold", 12); 
+        filterAndPaginateItems("sold-players-list", "sold-player-item", "sold-pagination", "search-bar-sold", 12); 
     });
 </script>
 

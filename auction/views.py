@@ -84,7 +84,7 @@ def user_auction_view(request):
         return redirect('admin_auction_view')
     
     all_players = Player.objects.all()
-    sold_players = Sale.objects.filter(is_sold=True)
+    sold_players = Sale.objects.filter(is_sold=True).order_by('-id')
     unsold_players = all_players.exclude(id__in=sold_players.values_list('player_id', flat=True))
     ongoing_player = Sale.objects.filter(is_sold=False).first()
 
@@ -192,9 +192,16 @@ def place_bid(request, player_id):
 
     last_bid = Bid.objects.filter(player=ongoing_player.player).order_by('-price').first()
     if last_bid:
-        new_bid_amount = last_bid.price + Decimal('0.1') 
+        last_bid_price = last_bid.price
+        if last_bid_price < Decimal('2'):
+            increment = Decimal('0.1')
+        elif Decimal('2') <= last_bid_price < Decimal('5'):
+            increment = Decimal('0.2')
+        else:  
+            increment = Decimal('0.25')
+        new_bid_amount = last_bid_price + increment
     else:
-        new_bid_amount = ongoing_player.player.base_price  
+        new_bid_amount = ongoing_player.player.base_price
 
     user_team = request.user.team
     if not last_bid or  last_bid.team != user_team:    
